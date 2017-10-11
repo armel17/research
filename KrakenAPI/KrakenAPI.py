@@ -33,6 +33,8 @@ class KrakenAPI:
         # 'name' must start with capital letter
         url = self.public_url + name
         result = self.session.get(url, headers=self.headers, params=params)
+
+
         return result
 
     def get_ohlc_data(self, currency_pair):
