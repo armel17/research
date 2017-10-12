@@ -6,6 +6,7 @@ import pprint
 import requests
 from datetime import datetime, timedelta
 from pymongo import MongoClient
+import time
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 os.chdir(dir_path)
@@ -37,36 +38,66 @@ class KrakenAPI:
 
         return result
 
-    def get_ohlc_data(self, currency_pair):
-        all_elements = self.db['ohlc'].find({'ccy_pair': currency_pair, 'last': {'$gt': 0}}).sort('last')
-        if all_elements.count() == 0:
-            since = 0
-        else:
-            since = max([x for x in all_elements])
-
-        theEnd = False
-        while not theEnd:
-
-            params = {
-                'pair': currency_pair,
-                'interval': 1440,  # in minutes: 1 (default), 5, 15, 30, 60, 240, 1440, 10080, 21600
-                'since': since
-            }
-
-            result = self.public_method('OHLC', params)
-            result_json = json.loads(result.text)
-            error = result_json['error']
-            results = result_json['result']
-            last = results['last']
-            print(datetime.fromtimestamp(int(last)))
-
-            if since == last:
-                theEnd = True
+    def download_ohlc_data(self, currency_pair):
+        for interval in [1, 5, 15, 30, 60, 240, 1440, 10080, 21600]:
+            collection = 'ohlc_%s' % (str(interval))
+            all_elements = self.db[collection].find({'ccy_pair': currency_pair, 'last': {'$gt': 0}}).sort('last')
+            if all_elements.count() == 0:
+                since = 0
             else:
-                since = last
+                since = max([x for x in all_elements])
 
-    def save_to_mongo(self, dicts):
-        self.db['ohlc'].insert_many(dicts)
+            theEnd = False
+            while not theEnd:
+
+                params = {
+                    'pair': currency_pair,
+                    'interval': interval,
+                    'since': since
+                }
+
+                result = self.public_method('OHLC', params)
+                # TODO - INCLUDE CALL COUNTER
+                # - https://support.kraken.com/hc/en-us/articles/206548367-What-is-the-API-call-rate-limit-
+                time.sleep(1)
+                if result.status_code == 200:
+                    result_json = json.loads(result.text)
+                    error = result_json['error']
+                    if error == []:
+                        results = result_json['result']
+                        datapoints = self.json_to_datapoints(results)
+                        self.save_to_mongo(collection, datapoints)
+                        last = results['last']
+                        # print(datetime.fromtimestamp(int(last)))
+
+                        if since == last:
+                            theEnd = True
+                        else:
+                            since = last
+                    else:
+                        print(error)
+                        theEnd = True
+
+    def save_to_mongo(self, collection, dicts):
+        self.db[collection].insert_many(dicts)
+
+    def json_to_datapoints(self, json_results):
+        ccy_pair = [x for x in json_results][0]
+        datapoints = []
+
+        for point in json_results[ccy_pair]:
+            datapoint = {'ccy_pair': ccy_pair}
+            datapoint['timestamp'] = datetime.fromtimestamp(point[0])
+            datapoint['open'] = float(point[1])
+            datapoint['high'] = float(point[2])
+            datapoint['low'] = float(point[3])
+            datapoint['close'] = float(point[4])
+            datapoint['vwap'] = float(point[5])
+            datapoint['volume'] = float(point[6])
+            datapoint['count'] = float(point[7])
+            datapoints.append(datapoint)
+
+        return datapoints
 
 
 if __name__ == '__main__':
@@ -75,5 +106,5 @@ if __name__ == '__main__':
         'timestamp': datetime.now()
     }
     pair = 'XXBTZEUR'
-    k.get_ohlc_data(pair)
+    k.download_ohlc_data(pair)
     #k.save_to_mongo([test, test])
