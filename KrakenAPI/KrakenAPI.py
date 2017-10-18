@@ -7,6 +7,7 @@ import requests
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 import time
+from APICallCounter import APICallCounter
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 os.chdir(dir_path)
@@ -29,23 +30,27 @@ class KrakenAPI:
             # 'cookie': '__cfduid=d5ee08fd9f625efa3e624593b426f54981486480951; dev=lROZyVvpxISGBA0Ont1TiGPhA_D_VHmOiDp3RPqsGzo; _ga=GA1.2.906282867.1486480955; _gid=GA1.2.788736959.1506965213; __zlcmid=flgKQkuR1iywrC',
             # 'referer': 'https://support.kraken.com/hc/en-us/articles/218198197-How-to-pull-all-trade-data-using-the-Kraken-REST-API',
         }
+        self.counter = APICallCounter(client_tier=2)
 
     def public_method(self, name, params):
         # 'name' must start with capital letter
         url = self.public_url + name
-        result = self.session.get(url, headers=self.headers, params=params)
-
-
-        return result
+        # TODO - Check that all public method increase counter by 2, or not
+        if self.counter.add_call(count_increase=2):
+            result = self.session.get(url, headers=self.headers, params=params)
+            return result
+        else:
+            return '%s public method not run' % name
 
     def download_ohlc_data(self, currency_pair):
         for interval in [1, 5, 15, 30, 60, 240, 1440, 10080, 21600]:
+            print('Start downloading %s for %s sec interval' % (currency_pair, str(interval)))
             collection = 'ohlc_%s' % (str(interval))
-            all_elements = self.db[collection].find({'ccy_pair': currency_pair, 'last': {'$gt': 0}}).sort('last')
+            all_elements = self.db[collection].find({'ccy_pair': currency_pair}, {'timestamp': 1})
             if all_elements.count() == 0:
                 since = 0
             else:
-                since = max([x for x in all_elements])
+                since = int(max([x['timestamp'] for x in all_elements]).timestamp())
 
             theEnd = False
             while not theEnd:
@@ -56,10 +61,8 @@ class KrakenAPI:
                     'since': since
                 }
 
+                print('Current API calls count: %s' % str(self.counter.api_calls_count))
                 result = self.public_method('OHLC', params)
-                # TODO - INCLUDE CALL COUNTER
-                # - https://support.kraken.com/hc/en-us/articles/206548367-What-is-the-API-call-rate-limit-
-                time.sleep(1)
                 if result.status_code == 200:
                     result_json = json.loads(result.text)
                     error = result_json['error']
@@ -77,9 +80,18 @@ class KrakenAPI:
                     else:
                         print(error)
                         theEnd = True
+            print('Done')
 
-    def save_to_mongo(self, collection, dicts):
-        self.db[collection].insert_many(dicts)
+    def save_to_mongo(self, collection, datapoints):
+        for datapoint in datapoints:
+            element_in_mongo = self.db[collection].find_one(
+                {
+                    'ccy_pair': datapoint['ccy_pair'],
+                    'timestamp': datapoint['timestamp']
+                }
+            )
+            if element_in_mongo is None:
+                self.db[collection].insert_one(datapoint)
 
     def json_to_datapoints(self, json_results):
         ccy_pair = [x for x in json_results][0]

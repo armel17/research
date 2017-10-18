@@ -37,16 +37,17 @@ class APICallCounter:
         dt = datetime.now() - self.last_count_decreased
         decrease = int(dt.total_seconds()) // self.tier_decrease_count_rate[self.client_tier]
         if decrease > 0:
-            self.api_calls_count -= decrease
+            self.api_calls_count = max(0, self.api_calls_count - decrease)
             self.last_count_decreased = datetime.now()
 
-    def add_call(self):
+    def add_call(self, count_increase=1):
         self.update_api_calls()
-        while self.api_calls_count >= self.tier_max_counts[self.client_tier]:
-            print('Waiting for API call count to decrease...')
-            time.sleep(0.5)
-            self.update_api_calls()
-        self.api_calls_count += 1
+        if count_increase > 0:
+            while self.api_calls_count >= self.tier_max_counts[self.client_tier]:
+                print('Waiting for API call count to decrease...')
+                time.sleep(0.5)
+                self.update_api_calls()
+            self.api_calls_count += count_increase
         return True
 
     def test_counter(self):
