@@ -32,7 +32,10 @@ class KrakenAPI:
         }
         self.counter = APICallCounter(client_tier=2)
 
-    def public_method(self, name, params):
+#
+# PUBLIC METHODS
+#
+    def public_method(self, name, params=None):
         # 'name' must start with capital letter
         url = self.public_url + name
         # TODO - Check that all public method increase counter by 2, or not
@@ -82,6 +85,33 @@ class KrakenAPI:
                         theEnd = True
             print('Done')
 
+    def get_tradable_asset_pairs(self):
+        result = self.public_method(name='AssetPairs')
+        if result.status_code == 200:
+            result_json = json.loads(result.text)
+            error = result_json['error']
+            if error == []:
+                asset_pairs = result_json['result']
+        return asset_pairs
+
+    def construct_database(self):
+        asset_pairs = self.get_tradable_asset_pairs()
+        for asset_pair in asset_pairs:
+            print('Downloading %s data' % asset_pair)
+            self.download_ohlc_data(asset_pair)
+            print('Done')
+
+
+#
+# PRIVATE METHODS
+#
+
+
+
+
+#
+# HELPERS
+#
     def save_to_mongo(self, collection, datapoints):
         for datapoint in datapoints:
             element_in_mongo = self.db[collection].find_one(
@@ -118,5 +148,8 @@ if __name__ == '__main__':
         'timestamp': datetime.now()
     }
     pair = 'XXBTZEUR'
-    k.download_ohlc_data(pair)
+    # k.download_ohlc_data(pair)
+    # k.get_tradable_asset_pairs()
+    # k.construct_database()
     #k.save_to_mongo([test, test])
+
