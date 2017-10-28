@@ -87,11 +87,19 @@ class KrakenAPI:
 
     def get_tradable_asset_pairs(self):
         result = self.public_method(name='AssetPairs')
-        if result.status_code == 200:
-            result_json = json.loads(result.text)
-            error = result_json['error']
-            if error == []:
-                asset_pairs = result_json['result']
+        try:
+            if result.status_code == 200:
+                result_json = json.loads(result.text)
+                error = result_json['error']
+                if error is []:
+                    asset_pairs = result_json['result']
+                else:
+                    raise Exception('Could not get tradable asset pairs.')
+            else:
+                raise Exception('Could not get tradable asset pairs.')
+        except Exception as e:
+            print(str(e))
+            asset_pairs = None
         return asset_pairs
 
     def construct_database(self):
@@ -147,8 +155,8 @@ if __name__ == '__main__':
     test = {
         'timestamp': datetime.now()
     }
-    pair = 'XXBTZEUR'
-    # k.download_ohlc_data(pair)
+    pair = 'XETHZEUR'
+    k.download_ohlc_data(pair)
     # k.get_tradable_asset_pairs()
     # k.construct_database()
     #k.save_to_mongo([test, test])
