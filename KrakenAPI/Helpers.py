@@ -42,13 +42,17 @@ class Helpers:
             return output
 
     def tuple_list_to_dframe(self, tuple_list, index=0):
-        return pd.DataFrame(tuple_list,index=[x[0] for x in tuple_list])
+        if type(index) is int:
+            return pd.DataFrame(tuple_list,index=[x[index] for x in tuple_list])
+        else:
+            print('Index type must be an int.')
+            return None
 
     def test_mongo_to_list(self):
         query = {
             'ccy_pair': 'XETHZEUR',
             'timestamp': {
-                '$gt': datetime.today() - timedelta(days=100)
+                '$gt': datetime.today() - timedelta(days=1000)
             }
         }
         interval = 1440
