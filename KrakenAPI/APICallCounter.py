@@ -45,7 +45,7 @@ class APICallCounter:
         if count_increase > 0:
             while self.api_calls_count >= self.tier_max_counts[self.client_tier]:
                 print('Waiting for API call count to decrease...')
-                time.sleep(0.5)
+                time.sleep(1)
                 self.update_api_calls()
             self.api_calls_count += count_increase
         return True
