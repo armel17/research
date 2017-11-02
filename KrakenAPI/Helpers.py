@@ -19,6 +19,10 @@ class Helpers:
         self.client = MongoClient()
         self.db = self.client.kraken
 
+    ##########################
+    # Data related functions #
+    ##########################
+
     def mongo_to_tuple_list(self, table, query, output_value=None, index='timestamp'):
         if output_value is None:
             return None
@@ -43,10 +47,27 @@ class Helpers:
 
     def tuple_list_to_dframe(self, tuple_list, index=0):
         if type(index) is int:
-            return pd.DataFrame(tuple_list,index=[x[index] for x in tuple_list])
+            return pd.DataFrame(tuple_list, index=[x[index] for x in tuple_list])
         else:
             print('Index type must be an int.')
             return None
+
+    #############################
+    # Finance related functions #
+    #############################
+    @staticmethod
+    def indicators_to_investment(indicator_name='', data=()):
+        results = None
+        if indicator_name != '' and data != ():
+            if indicator_name == 'macd':
+                macd = data[0]
+                macd_ewma = data[1]
+                results = pd.Series([x > y for x, y in zip(macd, macd_ewma)])  # will be autopromoted to int ?!
+        return results
+
+    #####################
+    # Testing functions #
+    #####################
 
     def test_mongo_to_list(self):
         query = {
