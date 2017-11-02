@@ -91,7 +91,7 @@ class KrakenAPI:
             if result.status_code == 200:
                 result_json = json.loads(result.text)
                 error = result_json['error']
-                if error is []:
+                if error == []:
                     asset_pairs = result_json['result']
                 else:
                     raise Exception('Could not get tradable asset pairs.')
@@ -156,8 +156,8 @@ if __name__ == '__main__':
         'timestamp': datetime.now()
     }
     pair = 'XETHZEUR'
-    k.download_ohlc_data(pair)
+    # k.download_ohlc_data(pair)
     # k.get_tradable_asset_pairs()
-    # k.construct_database()
+    k.construct_database()
     #k.save_to_mongo([test, test])
 
