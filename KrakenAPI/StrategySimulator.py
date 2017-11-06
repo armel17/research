@@ -33,6 +33,10 @@ class StrategySimulator:
         returns = pxlast.pct_change(1)
         invested = Helpers.indicators_to_investment(indicator_name='macd', data=(macd, macd_ema9))
 
+        # ema_difference = Indicators.ema_diff(pxlast, long_span=26, short_span=12)
+        # returns = pxlast.pct_change(1)
+        # invested = Helpers.indicators_to_investment(indicator_name='ema_diff', data=(ema_difference))
+
         # PROFITABILITY
         total_profit, strat_profit = self.profitability(returns, invested)
 

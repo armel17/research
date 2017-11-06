@@ -63,6 +63,9 @@ class Helpers:
                 macd = data[0]
                 macd_ewma = data[1]
                 results = pd.Series([x > y for x, y in zip(macd, macd_ewma)])  # will be autopromoted to int ?!
+            elif indicator_name == 'ema_diff':
+                ema_diff = data[0]
+                results = pd.Series([x > 0 for x in zip(ema_diff)])  # will be autopromoted to int ?!
         return results
 
     #####################

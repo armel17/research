@@ -158,7 +158,7 @@ if __name__ == '__main__':
     pair = 'XETHZEUR'
     # k.download_ohlc_data(pair)
     pprint.pprint(k.get_tradable_asset_pairs())
-    # k.construct_database()
+    k.construct_database()
     #k.save_to_mongo([test, test])
     print('...')
 
