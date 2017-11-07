@@ -27,6 +27,7 @@ class Indicators(object):
                 print('Unhandled exception in Indicators.macd: ' + str(e))
                 return None, None
 
+    @staticmethod
     def ema_diff(data, short_span=12, long_span=26):
         if type(data) is not pd.Series:
             raise TypeError('EMA_diff requires time series data to be of pandas.Series type.')
@@ -42,6 +43,7 @@ class Indicators(object):
                 print('Unhandled exception in Indicators.ema_diff: ' + str(e))
                 return None
 
+    @staticmethod
     def RSI(data, period):
         if type(data) is not pd.Series:
             raise TypeError('RSI requires time series data to be of pandas.Series type.')
@@ -57,6 +59,5 @@ class Indicators(object):
             u = u.drop(u.index[:(period - 1)])
             d[d.index[period - 1]] = np.mean(d[:period])  # first value is sum of avg losses
             d = d.drop(d.index[:(period - 1)])
-            rs = pd.stats.moments.ewma(u, com=period - 1, adjust=False) / \
-                pd.stats.moments.ewma(d, com=period - 1, adjust=False)
+            rs = pd.ewma(u, com=period - 1, adjust=False) / pd.ewma(d, com=period - 1, adjust=False)
             return 100 - 100 / (1 + rs)
