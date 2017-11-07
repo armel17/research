@@ -47,7 +47,7 @@ class KrakenAPI:
 
     def download_ohlc_data(self, currency_pair):
         for interval in [1, 5, 15, 30, 60, 240, 1440, 10080, 21600]:
-            print('Start downloading %s for %s sec interval' % (currency_pair, str(interval)))
+            print('Start downloading %s for %s min interval' % (currency_pair, str(interval)))
             collection = 'ohlc_%s' % (str(interval))
             all_elements = self.db[collection].find({'ccy_pair': currency_pair}, {'timestamp': 1})
             if all_elements.count() == 0:
@@ -152,13 +152,13 @@ class KrakenAPI:
 
 if __name__ == '__main__':
     k = KrakenAPI()
-    test = {
-        'timestamp': datetime.now()
-    }
-    pair = 'XETHZEUR'
+    # test = {
+    #     'timestamp': datetime.now()
+    # }
+    # pair = 'XETHZEUR'
     # k.download_ohlc_data(pair)
     pprint.pprint(k.get_tradable_asset_pairs())
-    #k.construct_database()
+    # k.construct_database()
     # k.save_to_mongo([test, test])
     print('...')
 
