@@ -5,7 +5,7 @@ import json
 import pprint
 import requests
 from datetime import datetime, timedelta
-from pymongo import MongoClient
+from pymongo import MongoClient, errors, ASCENDING, DESCENDING, TEXT
 import time
 from APICallCounter import APICallCounter
 
@@ -49,6 +49,7 @@ class KrakenAPI:
         for interval in [1, 5, 15, 30, 60, 240, 1440, 10080, 21600]:
             print('Start downloading %s for %s min interval' % (currency_pair, str(interval)))
             collection = 'ohlc_%s' % (str(interval))
+
             all_elements = self.db[collection].find({'ccy_pair': currency_pair}, {'timestamp': 1})
             if all_elements.count() == 0:
                 since = 0
@@ -102,11 +103,22 @@ class KrakenAPI:
             asset_pairs = None
         return asset_pairs
 
-    def construct_database(self):
+    def build_database(self):
         asset_pairs = self.get_tradable_asset_pairs()
+        first_pair = True
         for asset_pair in asset_pairs:
             print('Downloading %s data' % asset_pair)
             self.download_ohlc_data(asset_pair)
+            if first_pair:
+                for interval in [1, 5, 15, 30, 60, 240, 1440, 10080, 21600]:
+                    collection = 'ohlc_%s' % (str(interval))
+                    try:
+                        self.db[collection].create_index([('timestamp', ASCENDING)], background=True)
+                        self.db[collection].create_index([('ccy_pair', ASCENDING), ('timestamp', ASCENDING)],
+                                                         background=True)
+                    except Exception as e:
+                        print(e)
+                first_pair = False
             print('Done')
 
 
@@ -157,8 +169,8 @@ if __name__ == '__main__':
     # }
     # pair = 'XETHZEUR'
     # k.download_ohlc_data(pair)
-    pprint.pprint(k.get_tradable_asset_pairs())
-    # k.construct_database()
+    # pprint.pprint(k.get_tradable_asset_pairs())
+    k.build_database()
     # k.save_to_mongo([test, test])
     print('...')
 
