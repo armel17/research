@@ -18,7 +18,7 @@ class StrategySimulator:
     def __init__(self):
         self.helpers = Helpers()
 
-    def test_strategy(self, data=None):
+    def test_strategy(self, indicator, data=None):
         # DATA
         if data is None:
             stock = pd.read_csv('../Data/bitcoin_histo.csv', sep=';')
@@ -29,13 +29,19 @@ class StrategySimulator:
             pxlast = pd.Series(data[1].values)
 
         # COMPUTATIONS
-        macd, macd_ema9 = Indicators.macd(pxlast, long_span=26, short_span=12, smoothing_factor=9)
-        returns = pxlast.pct_change(1)
-        invested = Helpers.indicators_to_investment(indicator_name='macd', data=(macd, macd_ema9))
 
-        # ema_difference = Indicators.ema_diff(pxlast, long_span=26, short_span=12)
-        # returns = pxlast.pct_change(1)
-        # invested = Helpers.indicators_to_investment(indicator_name='ema_diff', data=(ema_difference))
+        if indicator == 'macd':
+            macd, macd_ema9 = Indicators.macd(pxlast, long_span=26, short_span=12, smoothing_factor=9)
+            returns = pxlast.pct_change(1)
+            invested = Helpers.indicators_to_investment(indicator_name='macd', data=(macd, macd_ema9))
+        elif indicator == 'ema':
+            ema_difference = Indicators.ema_diff(pxlast, long_span=26, short_span=12)
+            returns = pxlast.pct_change(1)
+            invested = Helpers.indicators_to_investment(indicator_name='ema_diff', data=ema_difference)
+        elif indicator == 'macd_rsi':
+            macd, macd_ema9 = Indicators.macd(pxlast, long_span=26, short_span=12, smoothing_factor=9)
+            rsi = Indicators.RSI(pxlast, period=14)
+            invested = Helpers.indicators_to_investment(indicator_name='macd_rsi', data=(macd, macd_ema9, rsi))
 
         # PROFITABILITY
         total_profit, strat_profit = self.profitability(returns, invested)
@@ -50,7 +56,6 @@ class StrategySimulator:
 
         # Pour voir le graphe s'afficher, mettre un breakpoint devant 'input(...)' et lancer en debug - à fixer
         input('...')
-
 
     def profitability(self, returns_mat, invested_mat):
         length_mat = len(returns_mat)
