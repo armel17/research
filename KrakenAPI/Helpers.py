@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from pymongo import MongoClient
 import time
 import pandas as pd
+import matplotlib.pyplot as plt
 import numpy as np
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -47,10 +48,34 @@ class Helpers:
 
     def tuple_list_to_dframe(self, tuple_list, index=0):
         if type(index) is int:
-            return pd.DataFrame(tuple_list, index=[x[index] for x in tuple_list])
+            return pd.DataFrame([x[1] for x in tuple_list], index=[x[index] for x in tuple_list])
         else:
             print('Index type must be an int.')
             return None
+
+    def mongo_to_df(self, ccy_pairs, since_date, interval=60, value_type='close'):
+        all_data = None
+        column_names = []
+        if type(ccy_pairs) is list:
+            for pair in ccy_pairs:
+                query = {
+                    'ccy_pair': pair,
+                    'timestamp': {
+                        '$gt': since_date
+                    }
+                }
+                data_raw = self.mongo_to_dict_list(table='ohlc_%s' % str(interval), query=query,
+                                                   output_value=value_type)
+                data_df = self.tuple_list_to_dframe(data_raw['close'])
+                if data_df.size > 0:
+                    column_names.append(pair)
+                    if all_data is None:
+                        all_data = data_df
+                    else:
+                        all_data = pd.concat([all_data, data_df], axis=1)
+            all_data.columns = column_names
+            return all_data
+
 
     #############################
     # Finance related functions #
@@ -94,4 +119,12 @@ class Helpers:
 
 if __name__ == '__main__':
     h = Helpers()
-    h.test_mongo_to_list()
+    # h.test_mongo_to_list()
+
+    ccy_pairs = ['XETHZEUR', 'XXBTZEUR', 'XETCZEUR']
+    since_date = datetime.strptime('01-01-2017', '%d-%m-%Y')
+    interval = 60
+    value_type = 'close'
+    data_df = h.mongo_to_df(ccy_pairs=ccy_pairs, since_date=since_date, interval=interval, value_type=value_type)
+    data_df.plot()
+    plt.show(block=True)
