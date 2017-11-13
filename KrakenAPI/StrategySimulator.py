@@ -83,14 +83,22 @@ class StrategySimulator:
 
 if __name__ == '__main__':
     s = StrategySimulator()
-    query = {
-        'ccy_pair': 'XETHZEUR',
-        'timestamp': {
-            '$gt': datetime.today() - timedelta(days=365)
-        }
-    }
-    interval = 30
-    value = 'close'
-    data = s.helpers.mongo_to_dict_list(table='ohlc_%s' % str(interval), query=query, output_value=value)
-    data_df = s.helpers.tuple_list_to_dframe(data['close'])
-    s.test_strategy(data=data_df)
+    ccy_pairs = ['XETHZEUR', 'XXBTZEUR', 'XETCZEUR']
+    since_date = datetime.strptime('01-01-2017', '%d-%m-%Y')
+    interval = 60
+    value_type = 'close'
+    data_df = s.helpers.mongo_to_df(ccy_pairs=ccy_pairs, since_date=since_date, interval=interval,
+                                    value_type=value_type)
+    data_df.plot()
+    plt.show(block=True)
+
+    # query = {
+    #     'ccy_pair': 'XETHZEUR',
+    #     'timestamp': {
+    #         '$gt': datetime.today() - timedelta(days=365)
+    #     }
+    # }
+    # value = 'close'
+    # data = s.helpers.mongo_to_dict_list(table='ohlc_%s' % str(interval), query=query, output_value=value)
+    # data_df = s.helpers.tuple_list_to_dframe(data['close'])
+    # s.test_strategy(data=data_df)
