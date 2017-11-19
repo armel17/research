@@ -1,0 +1,12 @@
+import pandas as pd
+import pandas_datareader as pdr
+from datetime import datetime
+
+stocks = ['COLR.BR', 'AGS.BR', 'ABI.BR', 'APAM.AS', 'BEKB.BR', 'BPOST.BR', 'COFB.BR', 'COLR.BR']
+
+close = [None] * len(stocks)
+
+for i in range(len(stocks)):
+    load_ = pdr.get_data_yahoo(symbols=stocks[i], start=datetime(2016, 10, 31), end=datetime(2017, 10, 31))
+    weeklydata = load_['Adj Close'].resample('W-FRI', how='last')
+    close[i] = weeklydata
