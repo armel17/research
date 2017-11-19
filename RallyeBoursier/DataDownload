@@ -1,12 +1,26 @@
 import pandas as pd
 import pandas_datareader as pdr
+import matplotlib.pyplot as plt
 from datetime import datetime
+
+from pandas_datareader._utils import RemoteDataError
 
 stocks = ['COLR.BR', 'AGS.BR', 'ABI.BR', 'APAM.AS', 'BEKB.BR', 'BPOST.BR', 'COFB.BR', 'COLR.BR']
 
-close = [None] * len(stocks)
+close = None
+column_names = []
 
 for i in range(len(stocks)):
-    load_ = pdr.get_data_yahoo(symbols=stocks[i], start=datetime(2016, 10, 31), end=datetime(2017, 10, 31))
-    weeklydata = load_['Adj Close'].resample('W-FRI', how='last')
-    close[i] = weeklydata
+    try:
+        load_ = pdr.get_data_yahoo(symbols=stocks[i], start=datetime(2016, 10, 31), end=datetime(2017, 10, 31))
+        weeklydata = load_['Adj Close'].resample('W-FRI').last()
+        if weeklydata.size > 0:
+            column_names.append(stocks[i])
+            close = pd.concat([close, weeklydata], axis=1)
+    except RemoteDataError as e:
+        print('Could no get %s - %s' % (stocks[i], e))
+        continue
+
+close.columns = column_names
+close.plot()
+plt.show(block=True)
