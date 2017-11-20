@@ -81,7 +81,7 @@ class AcquisitionHelpers:
 
     def build_database(self, asset_pairs=None):
         if asset_pairs is None:
-            asset_pairs = self.get_tradable_asset_pairs()
+            asset_pairs = list(self.get_tradable_asset_pairs().keys())
         if type(asset_pairs) is not list:
             print('asset_pairs should be a list.')
             return None
@@ -139,7 +139,7 @@ if __name__ == '__main__':
     # }
     # pair = 'XETHZEUR'
     # h.download_ohlc_data(pair)
-    pprint.pprint(h.get_tradable_asset_pairs().keys())
-    # h.build_database()
+    # pprint.pprint(h.get_tradable_asset_pairs().keys())
+    h.build_database()
     # h.save_to_mongo([test, test])
     print('...')

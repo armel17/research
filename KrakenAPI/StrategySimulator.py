@@ -88,7 +88,7 @@ class StrategySimulator:
 
 if __name__ == '__main__':
     s = StrategySimulator()
-    ccy_pairs = ['XETHZEUR', 'XXBTZEUR', 'XETCZEUR']
+    ccy_pairs = ['XETHZEUR', 'XXBTZEUR', 'XETCZEUR', 'XXRPZEUR']
     since_date = datetime.strptime('01-01-2017', '%d-%m-%Y')
     interval = 60
     value_type = 'close'
