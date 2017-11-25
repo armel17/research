@@ -116,4 +116,4 @@ if __name__ == '__main__':
     # value = 'close'
     # data = s.helpers.mongo_to_dict_list(table='ohlc_%s' % str(interval), query=query, output_value=value)
     # data_df = s.helpers.tuple_list_to_dframe(data['close'])
-    s.test_strategy(indicator='macd', data=data_df)
+    s.test_strategy(indicator='macd_rsi', data=data_df)

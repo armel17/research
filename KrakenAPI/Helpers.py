@@ -97,8 +97,27 @@ class Helpers:
                 macd = data[0]
                 macd_ewma = data[1]
                 rsi = data[2]
-                # TODO - @Rom - Et puis? :D
-
+                results = macd * 0
+                results.iloc[0] = [macd.iloc[0] > macd_ewma.iloc[0]]
+                skip_count = 0
+                for i in range(1, len(macd)):
+                    while skip_count > 0:
+                        skip_count -= 1
+                        continue
+                    if rsi.iloc[i - 1] > 70:
+                        if rsi.iloc[i] < 70:
+                            results[i:i + 4] = 0
+                            skip_count = 5
+                        else:
+                            results.iloc[i] = [macd.iloc[i] > macd_ewma.iloc[i]]
+                    elif rsi.iloc[i - 1] < 30:
+                        if rsi.iloc[i] > 30:
+                            results[i:i + 4] = 1
+                            skip_count = 5
+                        else:
+                            results.iloc[i] = [macd.iloc[i] > macd_ewma.iloc[i]]
+                    else:
+                        results.iloc[i] = [macd.iloc[i] > macd_ewma.iloc[i]]
         return results
 
     #####################
