@@ -12,7 +12,7 @@ os.chdir(dir_path)
 class Indicators(object):
     @staticmethod
     def macd(data, short_span=12, long_span=26, smoothing_factor=9):
-        if type(data) is not pd.Series:
+        if type(data) is not pd.Series and type(data) is not pd.DataFrame:
             raise TypeError('MACD requires time series data to be of pandas.Series type.')
         elif any([x for x in [short_span, long_span, smoothing_factor] if type(x) is not int]):
             raise TypeError('MACD requires arguments to be integers, except time series data.')

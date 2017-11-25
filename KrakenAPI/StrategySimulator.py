@@ -27,8 +27,8 @@ class StrategySimulator:
             dates_csv_str = stock['Date']
             dates = pd.to_datetime(dates_csv_str, dayfirst=True)
         else:
-            dates = pd.Series(data[0].values)
-            pxlast = pd.Series(data[1].values)
+            # dates = pd.Series(data[0].values)
+            pxlast = data  # pd.Series(data[1].values)
 
         # COMPUTATIONS
 
@@ -49,9 +49,13 @@ class StrategySimulator:
         total_profit, strat_profit = self.profitability(returns, invested)
 
         # PLOT
-        data_plot = pd.concat([dates, total_profit, strat_profit], axis=1)
-        data_plot.columns = ['dates', 'total', 'strat']
-        data_plot.plot(x='dates', y=['total', 'strat'])
+        data_plot = pd.concat([total_profit, strat_profit], axis=1)
+        data_plot.plot()
+        plt.show()
+
+        # data_plot = pd.concat([dates, total_profit, strat_profit], axis=1)
+        # data_plot.columns = ['dates', 'total', 'strat']
+        # data_plot.plot(x='dates', y=['total', 'strat'])
 
         # data_plot_1 = pd.concat([dates, pxlast], axis=1)
         # data_plot_1.columns = ['dates', 'MongoData']
@@ -74,28 +78,34 @@ class StrategySimulator:
         input('...')
 
     def profitability(self, returns_mat, invested_mat):
+        # Check returns matrix has no NaN - if so - replace by 0
+        returns_mat.fillna(0, inplace=True)
         length_mat = len(returns_mat)
-        total_return = pd.Series([0] * length_mat)
-        return_strat = pd.Series([0] * length_mat)
-        total_return.loc[0] = 100
-        return_strat.loc[0] = 100
+        total_return = pd.DataFrame().reindex_like(returns_mat)
+        return_strat = pd.DataFrame().reindex_like(returns_mat)
+        total_return.iloc[0] = 100
+        return_strat.iloc[0] = 100
 
-        for indexing in range(0, length_mat - 1):
-            total_return.loc[indexing + 1] = total_return.loc[indexing] * (1 + returns_mat.loc[indexing + 1])
-            return_strat.loc[indexing + 1] = return_strat.loc[indexing] * (1 + (invested_mat.loc[indexing]) * returns_mat.loc[indexing + 1])
+        for i in range(0, length_mat - 1):
+            total_return.iloc[i + 1] = total_return.iloc[i] * (1 + returns_mat.iloc[i + 1])
+            return_strat.iloc[i + 1] = return_strat.iloc[i] * (1 + (invested_mat.iloc[i]) * returns_mat.iloc[i + 1])
         return total_return, return_strat
 
 
 if __name__ == '__main__':
     s = StrategySimulator()
-    ccy_pairs = ['XETHZEUR', 'XXBTZEUR', 'XETCZEUR', 'XXRPZEUR']
+    ccy_pairs = [
+        'XETHZEUR',
+        # 'XETCZEUR',
+        # 'XXRPZEUR'
+    ]
     since_date = datetime.strptime('01-01-2017', '%d-%m-%Y')
     interval = 60
     value_type = 'close'
     data_df = s.helpers.mongo_to_df(ccy_pairs=ccy_pairs, since_date=since_date, interval=interval,
                                     value_type=value_type)
-    data_df.plot()
-    plt.show(block=True)
+    # data_df.plot()
+    # plt.show(block=True)
 
     # query = {
     #     'ccy_pair': 'XETHZEUR',
@@ -106,4 +116,4 @@ if __name__ == '__main__':
     # value = 'close'
     # data = s.helpers.mongo_to_dict_list(table='ohlc_%s' % str(interval), query=query, output_value=value)
     # data_df = s.helpers.tuple_list_to_dframe(data['close'])
-    # s.test_strategy(data=data_df)
+    s.test_strategy(indicator='macd', data=data_df)
