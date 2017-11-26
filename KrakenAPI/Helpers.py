@@ -104,14 +104,14 @@ class Helpers:
                     while skip_count > 0:
                         skip_count -= 1
                         continue
-                    if rsi.iloc[i - 1] > 70:
-                        if rsi.iloc[i] < 70:
+                    if (rsi.iloc[i - 1] > 70).bool():
+                        if (rsi.iloc[i] < 70).bool():
                             results[i:i + 4] = 0
                             skip_count = 5
                         else:
                             results.iloc[i] = [macd.iloc[i] > macd_ewma.iloc[i]]
-                    elif rsi.iloc[i - 1] < 30:
-                        if rsi.iloc[i] > 30:
+                    elif (rsi.iloc[i - 1] < 30).bool():
+                        if (rsi.iloc[i] > 30).bool():
                             results[i:i + 4] = 1
                             skip_count = 5
                         else:
@@ -143,7 +143,7 @@ if __name__ == '__main__':
     h = Helpers()
     # h.test_mongo_to_list()
 
-    ccy_pairs = ['XETHZEUR', 'XXBTZEUR', 'XETCZEUR']
+    ccy_pairs = ['XXBTZEUR']
     since_date = datetime.strptime('01-01-2017', '%d-%m-%Y')
     interval = 60
     value_type = 'close'
